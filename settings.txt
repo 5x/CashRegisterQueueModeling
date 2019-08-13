@@ -1,0 +1,6 @@
+standart	10	10	5	30	60	30
+random	r	r	r	r	r	r
+quick_mode	5	5	5	25	45	0
+elektronik	7	7	5	15	15	50
+gastronom	30	30	false	false	false	90
+agenstvo-office	10	false	false	210	false	90
