@@ -1,4 +1,4 @@
-﻿#include "CashRegisterQueueModeling.h"
+#include "CashRegisterQueueModeling.h"
 
 
 const std::string COMMAND_HELP = "help";
@@ -43,27 +43,27 @@ enum PaymentMethods {
 
 struct User {
 	std::string name;
-	double amount_cash;
-	double amount_on_card;
-	double amount_digital;
+	double amount_cash = 0;
+	double amount_on_card = 0;
+	double amount_digital = 0;
 	std::vector<int> products_cart;
 };
 
 struct Product {
 	std::string name;
-	double price;
-	int type;
-	int amount;
+	double price = 0;
+	int type = 0;
+	int amount = 0;
 };
 
 struct Configuration {
 	std::string name;
-	int max_users_in_queue;
-	int default_processing_time;
-	int digital_processing_time;
-	int service_processing_time;
-	int registration_processing_time;
-	int effectivity_rate;
+	int max_users_in_queue = 0;
+	int default_processing_time = 0;
+	int digital_processing_time = 0;
+	int service_processing_time = 0;
+	int registration_processing_time = 0;
+	int effectivity_rate = DEFAULT_EFFECTIVITY_RATE;
 };
 
 
@@ -103,11 +103,11 @@ int parse_int(const char* buff) {
 		throw std::out_of_range("Can\'t be parsed as integer.");
 	}
 
-	return (int)sl;
+	return static_cast<int>(sl);
 }
 
 double parse_double(const char* buff) {
-	double value = std::atof(buff);
+	const double value = std::atof(buff);
 
 	if (strlen(buff) == 0 || (value == 0.0 && buff[0] != '0')) {
 		throw std::out_of_range("Can\'t be parsed as double.");
@@ -124,10 +124,7 @@ double parse_double(const std::string& buff) {
 	return parse_double(buff.c_str());
 }
 
-void load_from_file(std::string filename, void handle(std::vector<std::string>)) {
-	const char DELIMETER = '\t';
-	std::vector<std::string> tokens;
-
+void load_from_file(const std::string& filename, void handle(std::vector<std::string>)) {
 	std::string line;
 	std::ifstream file(filename);
 
@@ -138,8 +135,9 @@ void load_from_file(std::string filename, void handle(std::vector<std::string>))
 		exit(1);
 	}
 
+	const char DELIMETER = '\t';
 	while (std::getline(file, line)) {
-		tokens = split(line, DELIMETER);
+		const std::vector<std::string> tokens = split(line, DELIMETER);
 		handle(tokens);
 	}
 
@@ -152,7 +150,8 @@ void print_file_to_console(const std::string& filename) {
 
 	if (file.fail()) {
 		std::cout << "Can\'t read \"" << filename << "\" file." << std::endl;
-	} else {
+	}
+	else {
 		while (std::getline(file, line)) {
 			std::cout << line << std::endl;
 		}
@@ -165,25 +164,28 @@ template <class T>
 T get_or_default(std::vector<T> values, int index, T default_value) {
 	try {
 		return values.at(index);
-	} catch (const std::out_of_range&) {
+	}
+	catch (const std::out_of_range&) {
 		return default_value;
 	}
 }
 
 double get_or_default(std::vector<std::string> values, int index, double default_value) {
 	try {
-		std::string value = values.at(index);
+		const std::string value = values.at(index);
 		return parse_double(value);
-	} catch (const std::out_of_range&) {
+	}
+	catch (const std::out_of_range&) {
 		return default_value;
 	}
 }
 
 int get_or_random(std::vector<std::string> values, int index, int min_range, int max_range) {
 	try {
-		std::string value = values.at(index);
+		const std::string value = values.at(index);
 		return parse_int(value);
-	} catch (const std::out_of_range&) {
+	}
+	catch (const std::out_of_range&) {
 		max_range = max_range - min_range + 1;
 		return min_range + std::rand() % max_range;
 	}
@@ -212,11 +214,11 @@ void create_user(
 
 	if (name.empty()) {
 		user.name = "Unnamed";
-	} else {
+	}
+	else {
 		user.name = name;
 	}
 
-	user.name = name;
 	user.amount_cash = amount_cash;
 	user.amount_on_card = amount_on_card;
 	user.amount_digital = amount_digital;
@@ -242,7 +244,8 @@ void create_product(const std::string& name, double price, int type, int amount)
 
 	if (name.empty()) {
 		product.name = "Unnamed";
-	} else {
+	}
+	else {
 		product.name = name;
 	}
 
@@ -290,11 +293,11 @@ void create_configuration(
 
 	if (name.empty()) {
 		configuration.name = "Unnamed";
-	} else {
+	}
+	else {
 		configuration.name = name;
 	}
 
-	configuration.name = name;
 	configuration.max_users_in_queue = max_users_in_queue;
 	configuration.default_processing_time = default_processing_time;
 	configuration.digital_processing_time = digital_processing_time;
@@ -310,8 +313,8 @@ std::vector<int> get_product_ids(std::vector<std::string> products_cart) {
 	std::vector<int> cart_ids;
 
 	for (std::vector<std::string>::iterator it = products_cart.begin();
-		it != products_cart.end() && num_of_products >= 0;
-		++it, --num_of_products) {
+	     it != products_cart.end() && num_of_products >= 0;
+	     ++it, --num_of_products) {
 		int value = parse_int(*it);
 
 		if (value != NULL) {
@@ -327,15 +330,15 @@ void user_parser(std::vector<std::string> values) {
 		return;
 	}
 
-	std::string name = get_or_default<std::string>(values, 0, "Unnamed");
-	double amount_cash = get_or_default(values, 1, 0.0);
-	double amount_on_card = get_or_default(values, 2, 0.0);
-	double amount_digital = get_or_default(values, 3, 0.0);
+	const std::string name = get_or_default<std::string>(values, 0, "Unnamed");
+	const double amount_cash = get_or_default(values, 1, 0.0);
+	const double amount_on_card = get_or_default(values, 2, 0.0);
+	const double amount_digital = get_or_default(values, 3, 0.0);
 
 	const char DELIMETER = ' ';
-	std::string product_cart_str = get_or_default<std::string>(values, 4, "");
-	std::vector<std::string> products_cart = split(product_cart_str, DELIMETER);
-	std::vector<int> cart_ids = get_product_ids(products_cart);
+	const std::string product_cart_str = get_or_default<std::string>(values, 4, "");
+	const std::vector<std::string> products_cart = split(product_cart_str, DELIMETER);
+	const std::vector<int> cart_ids = get_product_ids(products_cart);
 
 	create_user(name, amount_cash, amount_on_card, amount_digital, cart_ids);
 }
@@ -345,10 +348,10 @@ void product_parser(std::vector<std::string> values) {
 		return;
 	}
 
-	std::string name = get_or_default<std::string>(values, 0, "Unnamed");
-	double price = get_or_default(values, 1, 0.0);
-	int type = get_or_random(values, 2, 0, 0);
-	int amount = get_or_random(values, 3, 0, 0);
+	const std::string name = get_or_default<std::string>(values, 0, "Unnamed");
+	const double price = get_or_default(values, 1, 0.0);
+	const int type = get_or_random(values, 2, 0, 0);
+	const int amount = get_or_random(values, 3, 0, 0);
 
 	create_product(name, price, type, amount);
 }
@@ -358,17 +361,17 @@ void configuration_parser(std::vector<std::string> values) {
 		return;
 	}
 
-	std::string name = get_or_default<std::string>(values, 0, "Unnamed");
-	int max_users_in_queue = get_or_random(values, 1, DEFAULT_MIN_USERS_IN_QUEUE, DEFAULT_MAX_USERS_IN_QUEUE);
-	int default_processing_time = get_or_random(values, 2, 0, DEFAULT_MAX_PROCESSING_TIME);
-	int digital_processing_time = get_or_random(values, 3, 0, DEFAULT_MAX_DIGITAL_PROCESSING_TIME);
-	int service_processing_time = get_or_random(values, 4, 0, DEFAULT_MAX_SERVICE_PROCESSING_TIME);
-	int registration_processing_time = get_or_random(values, 5, 0, DEFAULT_MAX_REGISTRATION_PROCESSING_TIME);
-	int effectivity_rate = get_or_random(values, 6, 0, DEFAULT_EFFECTIVITY_RATE);
+	const std::string name = get_or_default<std::string>(values, 0, "Unnamed");
+	const int max_users_in_queue = get_or_random(values, 1, DEFAULT_MIN_USERS_IN_QUEUE, DEFAULT_MAX_USERS_IN_QUEUE);
+	const int default_processing_time = get_or_random(values, 2, 0, DEFAULT_MAX_PROCESSING_TIME);
+	const int digital_processing_time = get_or_random(values, 3, 0, DEFAULT_MAX_DIGITAL_PROCESSING_TIME);
+	const int service_processing_time = get_or_random(values, 4, 0, DEFAULT_MAX_SERVICE_PROCESSING_TIME);
+	const int registration_processing_time = get_or_random(values, 5, 0, DEFAULT_MAX_REGISTRATION_PROCESSING_TIME);
+	const int effectivity_rate = get_or_random(values, 6, 0, DEFAULT_EFFECTIVITY_RATE);
 
 	create_configuration(name, max_users_in_queue, default_processing_time,
-		digital_processing_time, service_processing_time,
-		registration_processing_time, effectivity_rate
+	                     digital_processing_time, service_processing_time,
+	                     registration_processing_time, effectivity_rate
 	);
 }
 
@@ -420,12 +423,13 @@ std::string user_handle(const std::string& message) {
 }
 
 int user_handle_int(const std::string& message) {
-	std::string input_string = user_handle(message);
+	const std::string input_string = user_handle(message);
 	int value;
 
 	try {
 		value = parse_int(input_string);
-	} catch (const char*) {
+	}
+	catch (const char*) {
 		std::cout << "Input value can\' be converted to number. Try again." << std::endl;
 
 		return user_handle_int(message);
@@ -435,12 +439,13 @@ int user_handle_int(const std::string& message) {
 }
 
 double user_handle_double(const std::string& message) {
-	std::string input_string = user_handle(message);
+	const std::string input_string = user_handle(message);
 	double value;
 
 	try {
 		value = parse_double(input_string);
-	} catch (const char*) {
+	}
+	catch (const char*) {
 		std::cout << "Input value can\' be converted to number. Try again." << std::endl;
 
 		return user_handle_double(message);
@@ -475,15 +480,15 @@ void handle_about() {
 }
 
 std::vector<std::vector<User>> generate_queue(Configuration cfg, int num_of_cash_registers) {
-	size_t num_of_users = users.size();
+	const size_t num_of_users = users.size();
 	std::vector<std::vector<User>> queues;
 
 	for (int i = 0; i < num_of_cash_registers; i++) {
-		int queue_size = rand() % cfg.max_users_in_queue;
+		const int queue_size = rand() % cfg.max_users_in_queue;
 		std::vector<User> queue;
 
 		for (int j = 0; j < queue_size; j++) {
-			int random_user_id = rand() % num_of_users;
+			const int random_user_id = rand() % num_of_users;
 			User user = users.at(random_user_id);
 			queue.push_back(user);
 		}
@@ -495,8 +500,8 @@ std::vector<std::vector<User>> generate_queue(Configuration cfg, int num_of_cash
 }
 
 std::string time_to_string(int seconds) {
-	int min = seconds / 60;
-	int sec = seconds % 60;
+	const int min = seconds / 60;
+	const int sec = seconds % 60;
 
 	return std::to_string(min) + ":" + (sec < 10 ? "0" : "") + std::to_string(sec);
 }
@@ -505,7 +510,7 @@ void show_available_configuration_list() {
 	std::cout << "Available configuration:" << std::endl;
 
 	for (std::vector<Configuration>::iterator it = configurations.begin();
-		it != configurations.end(); ++it) {
+	     it != configurations.end(); ++it) {
 		std::cout << (*it).name << " \\ ";
 	}
 
@@ -514,7 +519,7 @@ void show_available_configuration_list() {
 
 Configuration get_configuration_by_name(const std::string& configuration_name) {
 	for (std::vector<Configuration>::iterator it = configurations.begin();
-		it != configurations.end(); ++it) {
+	     it != configurations.end(); ++it) {
 		if ((*it).name == configuration_name) {
 			return *it;
 		}
@@ -533,7 +538,8 @@ void handle_start() {
 		if (num_of_cash_registers <= 0 || num_of_cash_registers > MAX_POSSIBLE_NUM_OF_CASH_REGISTERS) {
 			throw std::out_of_range("Value out of expected range.");
 		}
-	} catch (std::out_of_range&) {
+	}
+	catch (std::out_of_range&) {
 		std::cout << "Selected number of cash registers can\'t be handle." << std::endl;
 		return;
 	}
@@ -545,7 +551,8 @@ void handle_start() {
 	Configuration cfg;
 	try {
 		cfg = get_configuration_by_name(configuration_name);
-	} catch (std::out_of_range&) {
+	}
+	catch (std::out_of_range&) {
 		std::cout << "Configuration with specified name not found!" << std::endl;
 		return;
 	}
@@ -581,7 +588,8 @@ void handle_start() {
 
 		if (rename_check_code == 0) {
 			std::cout << "Result saved to: " << new_filename << std::endl;
-		} else {
+		}
+		else {
 			std::cout << "Error. Can\'t save, maybe file already exist." << std::endl;
 		}
 	}
@@ -598,23 +606,23 @@ void handle_currency() {
 		<< std::endl;
 
 	const std::string promt_message = "Type currency code: ";
-	int currency_code = user_handle_int(promt_message);
+	const int currency_code = user_handle_int(promt_message);
 
 	switch (currency_code) {
 	case 980:
-		::currency_rate = 1;
+		currency_rate = 1;
 		break;
 	case 840:
-		::currency_rate = 8.1;
+		currency_rate = 8.1;
 		break;
 	case 978:
-		::currency_rate = 10.4;
+		currency_rate = 10.4;
 		break;
 	case 826:
-		::currency_rate = 12.8;
+		currency_rate = 12.8;
 		break;
 	case 392:
-		::currency_rate = 0.085;
+		currency_rate = 0.085;
 		break;
 	default:
 		std::cout << "Invalid currency code value." << std::endl;
@@ -627,25 +635,25 @@ void handle_currency() {
 void select_payment_method_by_id(int payment_id) {
 	switch (payment_id) {
 	case 1:
-		::current_pay_method = MaxAvailableAmount;
+		current_pay_method = MaxAvailableAmount;
 		break;
 	case 2:
-		::current_pay_method = PayByAllPosibble;
+		current_pay_method = PayByAllPosibble;
 		break;
 	case 3:
-		::current_pay_method = OnlyCash;
+		current_pay_method = OnlyCash;
 		break;
 	case 4:
-		::current_pay_method = OnlyCreditCards;
+		current_pay_method = OnlyCreditCards;
 		break;
 	case 5:
-		::current_pay_method = OnlyDigitalWallet;
+		current_pay_method = OnlyDigitalWallet;
 		break;
 	case 6:
-		::current_pay_method = TogetherCashAndCreditCards;
+		current_pay_method = TogetherCashAndCreditCards;
 		break;
 	case 7:
-		::current_pay_method = UseWithoutPaymentRestrics;
+		current_pay_method = UseWithoutPaymentRestrics;
 		break;
 	default:
 		break;
@@ -664,20 +672,21 @@ void handle_paid_settings() {
 		<< std::endl;
 
 	const std::string promt_message = "Type number of payment method: ";
-	int payment_id = user_handle_int(promt_message);
+	const int payment_id = user_handle_int(promt_message);
 
 	if (payment_id <= 0 || payment_id > 7) {
 		std::cout << "Payment method not changed." << std::endl;
-	} else {
+	}
+	else {
 		select_payment_method_by_id(payment_id);
 		std::cout << "Payment method changed." << std::endl;
 	}
 
 	const std::string promt_additional_time_message = "Additional paid time value in seconds: ";
-	int paid_time_value = user_handle_int(promt_additional_time_message);
+	const int paid_time_value = user_handle_int(promt_additional_time_message);
 
 	if (paid_time_value >= 0) {
-		::paid_time = paid_time_value;
+		paid_time = paid_time_value;
 		std::cout << "Successful change." << std::endl;
 	}
 }
@@ -705,20 +714,20 @@ void handle_create_product() {
 	std::cout << "Creating new product." << std::endl;
 
 	const std::string promt_name_message = "Name: ";
-	std::string name = user_handle(promt_name_message);
+	const std::string name = user_handle(promt_name_message);
 
 	const std::string promt_price_message = "Price: ";
-	double price = user_handle_double(promt_price_message);
+	const double price = user_handle_double(promt_price_message);
 
 	const std::string promt_amount_message = "Available amount: ";
-	int amount = user_handle_int(promt_amount_message);
+	const int amount = user_handle_int(promt_amount_message);
 
 	std::cout << "Product type." << std::endl
 		<< "1 - Default; 2 - Digital; 3 - Service; 4 - Reqire registration." << std::endl;
 	const std::string promt_type_message = "Type number: ";
-	int product_type_id = user_handle_int(promt_type_message);
+	const int product_type_id = user_handle_int(promt_type_message);
 
-	std::vector<std::string> values{
+	const std::vector<std::string> values{
 		name,
 		std::to_string(price),
 		std::to_string(amount),
@@ -727,7 +736,7 @@ void handle_create_product() {
 
 	product_parser(values);
 
-	bool is_success_sync = save_to_db(PRODUCT_DB_FILE_NAME, values);
+	const bool is_success_sync = save_to_db(PRODUCT_DB_FILE_NAME, values);
 	if (is_success_sync) {
 		std::cout << name << ", successful added to db." << std::endl;
 	}
@@ -737,21 +746,21 @@ void handle_create_user() {
 	std::cout << "Registration new user." << std::endl;
 
 	const std::string promt_name_message = "Full name: ";
-	std::string name = user_handle(promt_name_message);
+	const std::string name = user_handle(promt_name_message);
 
 	const std::string promt_amount_cash_message = "Cash: ";
-	double amount_cash = user_handle_double(promt_amount_cash_message);
+	const double amount_cash = user_handle_double(promt_amount_cash_message);
 
 	const std::string promt_money_on_card_message = "Money on card: ";
-	double amount_on_card = user_handle_double(promt_money_on_card_message);
+	const double amount_on_card = user_handle_double(promt_money_on_card_message);
 
 	const std::string promt_amount_on_digital_wallet_message = "Money on digital wallet: ";
-	double amount_digital = user_handle_double(promt_amount_on_digital_wallet_message);
+	const double amount_digital = user_handle_double(promt_amount_on_digital_wallet_message);
 
 	const std::string promt_wish_list_message = "Product ids (use space as delimeter): ";
-	std::string wish_list = user_handle(promt_wish_list_message);
+	const std::string wish_list = user_handle(promt_wish_list_message);
 
-	std::vector<std::string> values{
+	const std::vector<std::string> values{
 		name,
 		std::to_string(amount_cash),
 		std::to_string(amount_on_card),
@@ -761,7 +770,7 @@ void handle_create_user() {
 
 	user_parser(values);
 
-	bool is_success_sync = save_to_db(USERS_DB_FILE_NAME, values);
+	const bool is_success_sync = save_to_db(USERS_DB_FILE_NAME, values);
 	if (is_success_sync) {
 		std::cout << name << ", successful added to db." << std::endl;
 	}
@@ -771,12 +780,13 @@ void handle_view_product() {
 	std::cout << "Available: " << products.size() << " product(s)" << std::endl;
 
 	const std::string promt_message = "Enter the #id of the product whose information you want to receive: ";
-	int product_id = user_handle_int(promt_message);
+	const int product_id = user_handle_int(promt_message);
 	Product product;
 
 	try {
 		product = products.at(product_id);
-	} catch (const std::out_of_range&) {
+	}
+	catch (const std::out_of_range&) {
 		std::cout << "Product not found with specified id: " << product_id << std::endl;
 
 		return;
@@ -790,12 +800,13 @@ void handle_view_product() {
 
 void handle_view_user() {
 	const std::string promt_message = "Enter the #id of the user whose information you want to receive: ";
-	int user_id = user_handle_int(promt_message);
+	const int user_id = user_handle_int(promt_message);
 	User user;
 
 	try {
 		user = users.at(user_id);
-	} catch (const std::out_of_range&) {
+	}
+	catch (const std::out_of_range&) {
 		std::cout << "User not found with specified id: " << user_id << std::endl;
 
 		return;
@@ -810,12 +821,13 @@ void handle_view_user() {
 
 void handle_view_user_cart() {
 	const std::string promt_message = "Enter the #id of the user whose wish cart you want to view: ";
-	int user_id = user_handle_int(promt_message);
+	const int user_id = user_handle_int(promt_message);
 
 	User user;
 	try {
 		user = users.at(user_id);
-	} catch (const std::out_of_range&) {
+	}
+	catch (const std::out_of_range&) {
 		std::cout << "User not found with specified id: " << user_id << std::endl;
 
 		return;
@@ -824,14 +836,14 @@ void handle_view_user_cart() {
 	double total_sum = 0.0;
 
 	for (std::vector<int>::iterator it = user.products_cart.begin();
-		it != user.products_cart.end(); ++it) {
-
+	     it != user.products_cart.end(); ++it) {
 		try {
 			Product product = products.at(*it);
 			total_sum += product.price;
 
 			std::cout << "#" << (*it) << '\t' << product.name << '\t' << product.price << std::endl;
-		} catch (const std::out_of_range&) {
+		}
+		catch (const std::out_of_range&) {
 			std::cout << "WARN: Product with id: " << *it << ", not available yet." << std::endl;
 		}
 	}
@@ -842,9 +854,10 @@ void handle_view_user_cart() {
 
 std::string user_handle_int_or_random(const std::string& message) {
 	try {
-		int value = user_handle_int(message);
+		const int value = user_handle_int(message);
 		return std::to_string(value);
-	} catch (std::out_of_range&) {
+	}
+	catch (std::out_of_range&) {
 		return "r";
 	}
 }
@@ -909,13 +922,14 @@ void print_detail_configuration_info(Configuration cfg) {
 void handle_view_configuration() {
 	show_available_configuration_list();
 
-	std::string promt_message = "Type name of configuration, to detail view: ";
-	std::string configuration_name = user_handle(promt_message);
+	const std::string promt_message = "Type name of configuration, to detail view: ";
+	const std::string configuration_name = user_handle(promt_message);
 
 	try {
-		Configuration cfg = get_configuration_by_name(configuration_name);
+		const Configuration cfg = get_configuration_by_name(configuration_name);
 		print_detail_configuration_info(cfg);
-	} catch (std::out_of_range&) {
+	}
+	catch (std::out_of_range&) {
 		std::cout << "Configuration with specified name not found!" << std::endl;
 	}
 }
@@ -928,29 +942,41 @@ void handle_application_exit() {
 void execute_command(const std::string& command) {
 	if (command == COMMAND_HELP) {
 		handle_help();
-	} else if (command == COMMAND_ABOUT) {
+	}
+	else if (command == COMMAND_ABOUT) {
 		handle_about();
-	} else if (command == COMMAND_START) {
+	}
+	else if (command == COMMAND_START) {
 		handle_start();
-	} else if (command == COMMAND_CURRENCY) {
+	}
+	else if (command == COMMAND_CURRENCY) {
 		handle_currency();
-	} else if (command == COMMAND_PAID_SETTINGS) {
+	}
+	else if (command == COMMAND_PAID_SETTINGS) {
 		handle_paid_settings();
-	} else if (command == COMMAND_CREATE_PRODUCT) {
+	}
+	else if (command == COMMAND_CREATE_PRODUCT) {
 		handle_create_product();
-	} else if (command == COMMAND_CREATE_USER) {
+	}
+	else if (command == COMMAND_CREATE_USER) {
 		handle_create_user();
-	} else if (command == COMMAND_VIEW_PRODUCT) {
+	}
+	else if (command == COMMAND_VIEW_PRODUCT) {
 		handle_view_product();
-	} else if (command == COMMAND_VIEW_USER) {
+	}
+	else if (command == COMMAND_VIEW_USER) {
 		handle_view_user();
-	} else if (command == COMMAND_VIEW_USER_CART) {
+	}
+	else if (command == COMMAND_VIEW_USER_CART) {
 		handle_view_user_cart();
-	} else if (command == COMMAND_CREATE_CONFIGURATION) {
+	}
+	else if (command == COMMAND_CREATE_CONFIGURATION) {
 		handle_create_configuration();
-	} else if (command == COMMAND_VIEW_CONFIGURATION) {
+	}
+	else if (command == COMMAND_VIEW_CONFIGURATION) {
 		handle_view_configuration();
-	} else if (command == COMMAND_EXIT) {
+	}
+	else if (command == COMMAND_EXIT) {
 		handle_application_exit();
 	}
 }
@@ -965,8 +991,8 @@ void main_loop() {
 }
 
 int main() {
-	time_t initial_time = time(NULL);
-	std::srand((unsigned int)initial_time);
+	const time_t initial_time = time(nullptr);
+	std::srand(static_cast<unsigned int>(initial_time));
 	std::cout << std::fixed << std::setprecision(2);
 
 	load_data();
